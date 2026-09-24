@@ -3,7 +3,7 @@
 [![CI](https://github.com/kenny-ish/univ3-tick-math/actions/workflows/ci.yml/badge.svg)](https://github.com/kenny-ish/univ3-tick-math/actions/workflows/ci.yml)
 
 Uniswap v3 keeps a pool's price in three different forms. This library converts between them,
-with token decimals handled for you:
+including the token decimals:
 
 | form | definition | where you meet it |
 |---|---|---|
@@ -11,7 +11,7 @@ with token decimals handled for you:
 | sqrtPriceX96 | `sqrt(price) * 2^96` (Q64.96 fixed point) | `slot0().sqrtPriceX96`, swap price limits |
 | human price | raw price `* 10^(decimals0 - decimals1)` | UIs, logs, strategy code |
 
-Prices are always **token1 per token0**, the order the pool stores its tokens (token0 is the
+Prices are always token1 per token0, the order the pool stores its tokens (token0 is the
 token with the lower address).
 
 ## Install
@@ -20,7 +20,7 @@ token with the lower address).
 pip install git+https://github.com/kenny-ish/univ3-tick-math
 ```
 
-Python 3.10+, no dependencies.
+Requires Python 3.10 or newer and nothing else.
 
 ## Command line
 
@@ -52,16 +52,16 @@ lower = nearest_usable(price_to_tick("0.000333333", dec0=6, dec1=18), 3000)
 ```
 
 `nearest_usable(tick, fee)` snaps a tick to the fee tier's tick spacing (100 -> 1, 500 -> 10,
-3000 -> 60, 10000 -> 200); positions can only be minted on those ticks.
+3000 -> 60, 10000 -> 200). Positions can only be minted on those ticks.
 
 ## Precision
 
 Everything runs on `decimal.Decimal` with 80 significant digits, so even the largest
 sqrtPriceX96 values convert without float rounding. Pass prices as `str`, `int` or `Decimal`
-when exactness matters; a Python `float` only carries about 17 significant digits.
+when exactness matters, since a Python `float` only carries about 17 significant digits.
 
-If a price looks upside down (0.000377 instead of 2654), the pair is the other way round;
-invert it.
+If a price looks upside down (0.000377 instead of 2654), the pair is the other way round,
+so invert it.
 
 ## Development
 
