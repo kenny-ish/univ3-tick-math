@@ -1,5 +1,7 @@
 # univ3-tick-math
 
+[![CI](https://github.com/kenny-ish/univ3-tick-math/actions/workflows/ci.yml/badge.svg)](https://github.com/kenny-ish/univ3-tick-math/actions/workflows/ci.yml)
+
 Uniswap v3 keeps a pool's price in three different forms. This library converts between them,
 with token decimals handled for you:
 
