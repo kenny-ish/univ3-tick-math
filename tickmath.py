@@ -94,9 +94,24 @@ def price_to_sqrtx96(price, dec0=0, dec1=0) -> int:
     return int(_raw(price, dec0, dec1).sqrt() * Q96)
 
 
-def nearest_usable(tick: int, fee: int) -> int:
-    spacing = TICK_SPACING[fee]
-    return round(tick / spacing) * spacing
+def usable_tick_range(spacing: int) -> tuple:
+    """Lowest and highest ticks a position can use with this tick spacing."""
+    return -(MAX_TICK // spacing) * spacing, (MAX_TICK // spacing) * spacing
+
+
+def nearest_usable(tick: int, fee: int = None, spacing: int = None) -> int:
+    """Nearest tick a position can use: a multiple of the tick spacing inside the tick range.
+
+    Halves round up, like nearestUsableTick in the Uniswap v3 SDK. Give either a fee tier
+    (100, 500, 3000, 10000) or an explicit tick spacing, e.g. 50 for PancakeSwap v3's 0.25% tier.
+    """
+    if spacing is None:
+        spacing = TICK_SPACING[fee]
+    if spacing <= 0:
+        raise ValueError("tick spacing must be positive")
+    lo, hi = usable_tick_range(spacing)
+    rounded = (tick + spacing // 2) // spacing * spacing
+    return max(lo, min(hi, rounded))
 
 
 def main():
@@ -107,6 +122,7 @@ def main():
     ap.add_argument("--dec0", type=int, default=0, help="decimals of token0")
     ap.add_argument("--dec1", type=int, default=0, help="decimals of token1")
     ap.add_argument("--fee", type=int, choices=sorted(TICK_SPACING), help="fee tier for tick snapping")
+    ap.add_argument("--spacing", type=int, help="explicit tick spacing (overrides --fee)")
     a = ap.parse_args()
 
     if a.cmd == "tick2price":
@@ -115,9 +131,10 @@ def main():
     elif a.cmd == "price2tick":
         t = price_to_tick(a.value, a.dec0, a.dec1)
         print(f"tick {t}")
-        if a.fee:
-            u = nearest_usable(t, a.fee)
-            print(f"nearest usable tick for fee {a.fee}: {u} -> price {tick_to_price(u, a.dec0, a.dec1):.10g}")
+        if a.fee or a.spacing:
+            spacing = a.spacing or TICK_SPACING[a.fee]
+            u = nearest_usable(t, spacing=spacing)
+            print(f"nearest usable tick (spacing {spacing}): {u} -> price {tick_to_price(u, a.dec0, a.dec1):.10g}")
     elif a.cmd == "sqrt2price":
         p = sqrtx96_to_price(int(a.value), a.dec0, a.dec1)
         print(f"price {p:.10g}  (inverse {1 / p:.10g})")
