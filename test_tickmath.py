@@ -2,7 +2,7 @@ import unittest
 from decimal import Decimal
 
 from tickmath import (MAX_TICK, MIN_TICK, Q96, nearest_usable, price_to_sqrtx96,
-                      price_to_tick, sqrtx96_to_price, tick_to_price)
+                      price_to_tick, sqrtx96_to_price, tick_to_price, usable_tick_range)
 
 
 class TickMathTest(unittest.TestCase):
@@ -37,9 +37,27 @@ class TickMathTest(unittest.TestCase):
         self.assertLessEqual(tick_to_price(tick, 18, 6), 3500)
         self.assertGreater(tick_to_price(tick + 1, 18, 6), 3500)
 
-    def test_usable_tick(self):
+
+class NearestUsableTest(unittest.TestCase):
+    def test_snaps_to_the_fee_tier_spacing(self):
         self.assertEqual(nearest_usable(12345, 3000), 12360)
         self.assertEqual(nearest_usable(-12345, 500), -12340)
+
+    def test_halves_round_up_like_the_sdk(self):
+        self.assertEqual(nearest_usable(30, 3000), 60)
+        self.assertEqual(nearest_usable(-30, 3000), 0)
+        self.assertEqual(nearest_usable(-31, 3000), -60)
+
+    def test_stays_inside_the_tick_range(self):
+        self.assertEqual(usable_tick_range(60), (-887220, 887220))
+        self.assertEqual(nearest_usable(MAX_TICK, 3000), 887220)
+        self.assertEqual(nearest_usable(MIN_TICK, 3000), -887220)
+        self.assertEqual(nearest_usable(MAX_TICK, 10000), 887200)
+
+    def test_custom_tick_spacing(self):
+        self.assertEqual(nearest_usable(1234, spacing=50), 1250)
+        with self.assertRaises(ValueError):
+            nearest_usable(0, spacing=0)
 
 
 if __name__ == "__main__":
