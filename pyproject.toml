@@ -11,7 +11,7 @@ requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "kenny-ish" }]
-keywords = ["uniswap", "uniswap-v3", "defi", "ethereum", "amm", "tick"]
+keywords = ["uniswap", "uniswap-v3", "defi", "ethereum", "amm", "tick", "liquidity"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
@@ -24,6 +24,7 @@ Changelog = "https://github.com/kenny-ish/univ3-tick-math/blob/main/CHANGELOG.md
 
 [project.scripts]
 univ3-tick = "tickmath:main"
+univ3-liquidity = "liquidity:main"
 
 [tool.setuptools]
-py-modules = ["tickmath"]
+py-modules = ["tickmath", "liquidity"]
