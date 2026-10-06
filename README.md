@@ -3,7 +3,7 @@
 [![CI](https://github.com/kenny-ish/univ3-tick-math/actions/workflows/ci.yml/badge.svg)](https://github.com/kenny-ish/univ3-tick-math/actions/workflows/ci.yml)
 
 Uniswap v3 keeps a pool's price in three different forms. This library converts between them,
-including the token decimals:
+including the token decimals, and computes how much of each token a position holds:
 
 | form | definition | where you meet it |
 |---|---|---|
@@ -29,7 +29,7 @@ $ univ3-tick tick2price 197480 --dec0 6 --dec1 18
 price 0.0003767199631  (inverse 2654.491660)
 $ univ3-tick price2tick 2650 --dec0 18 --dec1 6 --fee 3000
 tick -197497
-nearest usable tick for fee 3000: -197520 -> price 2643.895430
+nearest usable tick (spacing 60): -197520 -> price 2643.895430
 $ univ3-tick tick2sqrt -887272
 sqrtPriceX96 4295128739
 $ univ3-tick sqrt2tick 79228162514264337593543950336
@@ -54,9 +54,9 @@ lower = nearest_usable(price_to_tick("0.000333333", dec0=6, dec1=18), 3000)
 ```
 
 `price_to_tick` returns the greatest tick whose price is <= the given price and round-trips
-exactly with `tick_to_price`. `nearest_usable(tick, fee)` snaps a tick to the fee tier's tick
-spacing (100 -> 1, 500 -> 10, 3000 -> 60, 10000 -> 200). Positions can only be minted on those
-ticks.
+exactly with `tick_to_price`. `nearest_usable` snaps a tick to the tick spacing (fee tier 100 ->
+1, 500 -> 10, 3000 -> 60, 10000 -> 200, or `spacing=` for other deployments), rounding halves up
+like the Uniswap SDK and staying inside the usable range.
 
 ## Exact on-chain math
 
@@ -71,8 +71,23 @@ ticks.
 0
 ```
 
-Use these whenever a result has to agree with the chain: checking `slot0`, computing swap price
-limits, simulating positions. The `Decimal` helpers are for human-readable prices.
+## Position amounts
+
+`liquidity.py` ports `LiquidityAmounts.sol` from the periphery contracts: token amounts for a
+given liquidity, and the liquidity that given amounts can fund, with the same integer rounding.
+
+```bash
+$ univ3-liquidity --tick 0 --lower -600 --upper 600 --liquidity 1000000000000000000
+amount0   29553010879137169
+amount1   29553010879137169
+$ univ3-liquidity --tick 0 --lower -600 --upper 600 --amount0 1000000 --amount1 1000000
+liquidity 33837499
+amount0   999999
+amount1   999999
+```
+
+Amounts are raw integers in each token's smallest unit. These functions round down like the
+library. When minting, the pool rounds the amounts it takes up, so a mint can take one unit more.
 
 ## Precision
 

@@ -11,6 +11,8 @@ All notable changes to this project are documented in this file.
 - Fixed: `nearest_usable` rounds halves up like the Uniswap SDK and never leaves the usable tick range
 - `nearest_usable(tick, spacing=...)` for tick spacings outside the standard fee tiers, and `usable_tick_range(spacing)`
 - CLI: `--spacing`
+- `liquidity` module: port of `LiquidityAmounts.sol` (token amounts for liquidity and liquidity for amounts, same integer rounding)
+- `univ3-liquidity` console script
 
 ## 0.1.0 - 2026-09-24
 
