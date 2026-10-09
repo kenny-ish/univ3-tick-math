@@ -13,6 +13,7 @@ All notable changes to this project are documented in this file.
 - CLI: `--spacing`
 - `liquidity` module: port of `LiquidityAmounts.sol` (token amounts for liquidity and liquidity for amounts, same integer rounding)
 - `univ3-liquidity` console script
+- `examples/check_live_pool.py`: reads `slot0()` of a live pool over JSON-RPC and checks it against `get_tick_at_sqrt_ratio`
 
 ## 0.1.0 - 2026-09-24
 
