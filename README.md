@@ -71,6 +71,24 @@ like the Uniswap SDK and staying inside the usable range.
 0
 ```
 
+A live pool makes a good end-to-end check. `examples/check_live_pool.py` reads `slot0()` of a
+mainnet pool over plain JSON-RPC and checks that the stored tick equals
+`get_tick_at_sqrt_ratio(sqrtPriceX96)`:
+
+```bash
+$ python examples/check_live_pool.py
+pool           0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640
+tokens         USDC / WETH (6 / 18 decimals)
+sqrtPriceX96   1532120860153536466420187884009850
+slot0 tick     197406
+computed tick  197406  (match)
+price          0.00037396149 WETH per USDC  (2674.0721 USDC per WETH)
+```
+
+There is one legitimate difference. A downward swap that ends exactly on a tick boundary stores
+`tick = boundary - 1` while the price equals the boundary's ratio. The script reports that as a
+boundary case rather than a mismatch.
+
 ## Position amounts
 
 `liquidity.py` ports `LiquidityAmounts.sol` from the periphery contracts: token amounts for a
