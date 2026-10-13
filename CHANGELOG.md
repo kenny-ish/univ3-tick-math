@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented in this file.
 
-## Unreleased
+## 0.2.0 - 2026-10-13
 
 - `get_sqrt_ratio_at_tick` / `get_tick_at_sqrt_ratio`: exact integer ports of `TickMath.sol`, plus `MIN_SQRT_RATIO` / `MAX_SQRT_RATIO`
 - CLI: `tick2sqrt` and `sqrt2tick`
@@ -14,6 +14,8 @@ All notable changes to this project are documented in this file.
 - `liquidity` module: port of `LiquidityAmounts.sol` (token amounts for liquidity and liquidity for amounts, same integer rounding)
 - `univ3-liquidity` console script
 - `examples/check_live_pool.py`: reads `slot0()` of a live pool over JSON-RPC and checks it against `get_tick_at_sqrt_ratio`
+- `get_tick_at_sqrt_ratio` starts from a float estimate and settles it with two or three exact evaluations instead of a 21-step binary search (about 8x faster, see `bench.py`)
+- `bench.py` micro-benchmarks
 
 ## 0.1.0 - 2026-09-24
 

@@ -4,6 +4,7 @@ get_sqrt_ratio_at_tick and get_tick_at_sqrt_ratio are exact integer ports of Tic
 The Decimal helpers convert to and from human prices with token decimals.
 """
 import argparse
+import math
 from decimal import ROUND_FLOOR, Decimal, getcontext
 
 getcontext().prec = 80
@@ -28,6 +29,8 @@ _RATIOS = (
     0x2216e584f5fa1ea926041bedfe98, 0x48a170391f7dc42444e8fa2,
 )
 _MAX_UINT256 = (1 << 256) - 1
+_LN_Q96 = 96 * math.log(2)
+_LN_SQRT_BASE = math.log(1.0001) / 2
 
 
 def get_sqrt_ratio_at_tick(tick: int) -> int:
@@ -48,14 +51,14 @@ def get_tick_at_sqrt_ratio(sqrt_price_x96: int) -> int:
     """Greatest tick whose sqrt ratio is <= sqrt_price_x96, like TickMath.getTickAtSqrtRatio."""
     if not MIN_SQRT_RATIO <= sqrt_price_x96 < MAX_SQRT_RATIO:
         raise ValueError(f"sqrtPriceX96 {sqrt_price_x96} outside [MIN_SQRT_RATIO, MAX_SQRT_RATIO)")
-    lo, hi = MIN_TICK, MAX_TICK  # ratio(lo) <= sqrt_price_x96 < ratio(hi)
-    while hi - lo > 1:
-        mid = (lo + hi) // 2
-        if get_sqrt_ratio_at_tick(mid) <= sqrt_price_x96:
-            lo = mid
-        else:
-            hi = mid
-    return lo
+    # A float estimate lands within a tick or two; the exact comparisons make the result exact.
+    tick = math.floor((math.log(sqrt_price_x96) - _LN_Q96) / _LN_SQRT_BASE)
+    tick = max(MIN_TICK, min(MAX_TICK - 1, tick))
+    while get_sqrt_ratio_at_tick(tick) > sqrt_price_x96:
+        tick -= 1
+    while get_sqrt_ratio_at_tick(tick + 1) <= sqrt_price_x96:
+        tick += 1
+    return tick
 
 
 def _raw(price, dec0, dec1) -> Decimal:

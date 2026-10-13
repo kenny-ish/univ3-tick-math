@@ -116,6 +116,22 @@ Python `float` only carries about 17 significant digits.
 If a price looks upside down (0.000377 instead of 2654), the pair is the other way round,
 so invert it.
 
+## Performance
+
+`python bench.py` on a 2 vCPU cloud VM with CPython 3.12:
+
+```
+get_sqrt_ratio_at_tick       2.31 us/call
+get_tick_at_sqrt_ratio       6.33 us/call
+tick_to_price                6.89 us/call
+price_to_tick              120.25 us/call
+```
+
+The exact functions are pure integer arithmetic. `get_tick_at_sqrt_ratio` takes a float
+estimate from `log(sqrtPriceX96)` and settles it with two or three exact evaluations. The
+`Decimal` helpers are slower because of the 80-digit precision; use the exact functions in hot
+loops.
+
 ## Development
 
 ```bash
