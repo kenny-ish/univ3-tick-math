@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented in this file.
 
+## Unreleased
+
+- Tests sweep the whole tick range (every 997th tick) for round trips, boundaries and monotonicity
+
 ## 0.2.0 - 2026-10-13
 
 - `get_sqrt_ratio_at_tick` / `get_tick_at_sqrt_ratio`: exact integer ports of `TickMath.sol`, plus `MIN_SQRT_RATIO` / `MAX_SQRT_RATIO`
