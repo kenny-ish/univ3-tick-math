@@ -2,9 +2,10 @@
 
 All notable changes to this project are documented in this file.
 
-## Unreleased
+## 0.3.0 - 2026-10-21
 
 - Tests sweep the whole tick range (every 997th tick) for round trips, boundaries and monotonicity
+- CLI: `--json` prints one JSON object; decimals and 160-bit integers are emitted as strings so no JSON parser rounds them
 
 ## 0.2.0 - 2026-10-13
 
