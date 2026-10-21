@@ -40,6 +40,14 @@ The first line is the USDC/WETH pool (USDC is token0 with 6 decimals, WETH token
 tick 197480 one USDC is worth 0.000377 WETH, i.e. about 2654 USDC per WETH. Without installing,
 `python tickmath.py ...` does the same.
 
+Add `--json` to get one JSON object instead, for scripts and other languages. Decimals and
+sqrtPriceX96 values come out as strings so no JSON parser rounds them:
+
+```bash
+$ univ3-tick price2tick 2650 --dec0 18 --dec1 6 --fee 3000 --json
+{"price": "2650", "tick": -197497, "usable_tick": -197520, "usable_price": "2643.8954295462674193024075086380927445412260253418311921615763607774412659749136"}
+```
+
 ## Library
 
 ```python
@@ -138,4 +146,5 @@ loops.
 python -m unittest -v
 ```
 
+The tests pin the constants of `TickMath.sol`, sweep the whole tick range, and run the CLI.
 Release notes are in [CHANGELOG.md](CHANGELOG.md).

@@ -4,6 +4,7 @@ get_sqrt_ratio_at_tick and get_tick_at_sqrt_ratio are exact integer ports of Tic
 The Decimal helpers convert to and from human prices with token decimals.
 """
 import argparse
+import json
 import math
 from decimal import ROUND_FLOOR, Decimal, getcontext
 
@@ -117,7 +118,34 @@ def nearest_usable(tick: int, fee: int = None, spacing: int = None) -> int:
     return max(lo, min(hi, rounded))
 
 
-def main():
+def convert(cmd: str, value: str, dec0=0, dec1=0, spacing=None):
+    """Run one CLI conversion. Returns (fields for --json, lines of text)."""
+    if cmd == "tick2price":
+        p = tick_to_price(int(value), dec0, dec1)
+        return {"tick": int(value), "price": p, "inverse": 1 / p}, [f"price {p:.10g}  (inverse {1 / p:.10g})"]
+    if cmd == "price2tick":
+        t = price_to_tick(value, dec0, dec1)
+        fields, lines = {"price": value, "tick": t}, [f"tick {t}"]
+        if spacing:
+            u = nearest_usable(t, spacing=spacing)
+            up = tick_to_price(u, dec0, dec1)
+            fields.update(usable_tick=u, usable_price=up)
+            lines.append(f"nearest usable tick (spacing {spacing}): {u} -> price {up:.10g}")
+        return fields, lines
+    if cmd == "sqrt2price":
+        p = sqrtx96_to_price(int(value), dec0, dec1)
+        return {"sqrt_price_x96": value, "price": p, "inverse": 1 / p}, [f"price {p:.10g}  (inverse {1 / p:.10g})"]
+    if cmd == "price2sqrt":
+        s = price_to_sqrtx96(value, dec0, dec1)
+        return {"price": value, "sqrt_price_x96": str(s)}, [f"sqrtPriceX96 {s}"]
+    if cmd == "tick2sqrt":
+        s = get_sqrt_ratio_at_tick(int(value))
+        return {"tick": int(value), "sqrt_price_x96": str(s)}, [f"sqrtPriceX96 {s}"]
+    t = get_tick_at_sqrt_ratio(int(value))
+    return {"sqrt_price_x96": value, "tick": t}, [f"tick {t}"]
+
+
+def main(argv=None):
     ap = argparse.ArgumentParser(description="Uniswap v3 tick / price / sqrtPriceX96 conversions")
     ap.add_argument("cmd", choices=["tick2price", "price2tick", "sqrt2price", "price2sqrt",
                                     "tick2sqrt", "sqrt2tick"])
@@ -126,27 +154,15 @@ def main():
     ap.add_argument("--dec1", type=int, default=0, help="decimals of token1")
     ap.add_argument("--fee", type=int, choices=sorted(TICK_SPACING), help="fee tier for tick snapping")
     ap.add_argument("--spacing", type=int, help="explicit tick spacing (overrides --fee)")
-    a = ap.parse_args()
+    ap.add_argument("--json", action="store_true", help="print one JSON object instead of text")
+    a = ap.parse_args(argv)
 
-    if a.cmd == "tick2price":
-        p = tick_to_price(int(a.value), a.dec0, a.dec1)
-        print(f"price {p:.10g}  (inverse {1 / p:.10g})")
-    elif a.cmd == "price2tick":
-        t = price_to_tick(a.value, a.dec0, a.dec1)
-        print(f"tick {t}")
-        if a.fee or a.spacing:
-            spacing = a.spacing or TICK_SPACING[a.fee]
-            u = nearest_usable(t, spacing=spacing)
-            print(f"nearest usable tick (spacing {spacing}): {u} -> price {tick_to_price(u, a.dec0, a.dec1):.10g}")
-    elif a.cmd == "sqrt2price":
-        p = sqrtx96_to_price(int(a.value), a.dec0, a.dec1)
-        print(f"price {p:.10g}  (inverse {1 / p:.10g})")
-    elif a.cmd == "price2sqrt":
-        print(f"sqrtPriceX96 {price_to_sqrtx96(a.value, a.dec0, a.dec1)}")
-    elif a.cmd == "tick2sqrt":
-        print(f"sqrtPriceX96 {get_sqrt_ratio_at_tick(int(a.value))}")
+    spacing = a.spacing or (TICK_SPACING[a.fee] if a.fee else None)
+    fields, lines = convert(a.cmd, a.value, a.dec0, a.dec1, spacing)
+    if a.json:
+        print(json.dumps({k: str(v) if isinstance(v, Decimal) else v for k, v in fields.items()}))
     else:
-        print(f"tick {get_tick_at_sqrt_ratio(int(a.value))}")
+        print("\n".join(lines))
 
 
 if __name__ == "__main__":
